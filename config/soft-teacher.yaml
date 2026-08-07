@@ -1,0 +1,4 @@
+name: soft-teacher
+display_name: soft-teacher
+HOST_PORT_URL : "http://0.0.0.0:50/"
+DETECTION_URL : "api/v1/object-detection/soft-teacher/"

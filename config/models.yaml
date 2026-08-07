@@ -1,0 +1,60 @@
+models:
+#- model_name: "pytracking_atom"
+#  config_file: "config/atom.yaml"
+- model_name: "pytracking_dimp_50"
+  config_file: "config/dimp50.yaml"
+- model_name: "pytracking_dimp_18"
+  config_file: "config/dimp18.yaml"
+- model_name: "pytracking_prdimp50"
+  config_file: "config/prdimp50.yaml"
+- model_name: "pytracking_prdimp18"
+  config_file: "config/prdimp18.yaml"
+- model_name: "pytracking_super_dimp"
+  config_file: "config/super_dimp.yaml"
+#- model_name: "pytracking_eco"        pth required
+#  config_file: "config/eco.yaml"      pth required
+- model_name: "pytracking_keep_track"
+  config_file: "config/keep_track.yaml"
+- model_name: "pytracking_kys"
+  config_file: "config/kys.yaml"
+- model_name: "pytracking_tomp50"
+  config_file: "config/tomp50.yaml"
+#- model_name: "pytracking_tomp101"
+#  config_file: "config/tomp101.yaml"
+
+#- model_name: "soft-teacher"
+#  config_file: "config/soft-teacher.yaml"
+- model_name: "inner_opencv_tracker_CSRT"
+  config_file: ""
+- model_name : "inner_opencv_tracker_KCF"
+  config_file: ""
+- model_name : "inner_opencv_tracker_BOOSTING"
+  config_file: ""
+- model_name : "inner_opencv_tracker_MIL"
+  config_file: ""
+- model_name : "inner_opencv_tracker_TLD"
+  config_file: ""
+- model_name : "inner_opencv_tracker_MEDIANFLOW"
+  config_file: ""
+- model_name : "inner_opencv_tracker_MOSSE"
+  config_file: ""
+
+paths:
+- path_name: "default_open_dir_path"
+  path: "/home/longqi/图片/实采素材整理/02可见光"
+- path_name: "default_save_dir_path"
+  path: "/home/longqi/tmp"
+
+output_json: "False"
+
+#- path_name: "default_desp_path"
+#  path: "/home/longqi/tmp"
+
+#- model_name: "SiamMask"
+#  config_file: "soft-teacher.yaml"
+#- model_name: "yolo-v5"
+#  config_file: "soft-teacher.yaml"
+#description:
+#- json_path: ""
+
+

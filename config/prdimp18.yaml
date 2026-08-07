@@ -1,0 +1,6 @@
+algo_name: dimp
+algo_param: prdimp18
+display_name: prdimp18
+HOST_PORT_URL : "http://127.0.0.1:5000/"
+LAUNCH_URL : "/api/v1/mot/pytracking/launch_tracking"
+TRACK_NEXT_URL : "/api/v1/mot/pytracking/track_next"

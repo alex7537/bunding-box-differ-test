@@ -1,0 +1,41 @@
+*.pyc
+build/
+libs/__pycache__/
+.idea/
+*.log
+
+# Python environments and caches
+.venv/
+venv/
+.codex/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+
+# Local secrets and credentials
+/aa.py
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*credentials*.json
+*secret*.json
+
+# Models and generated artifacts
+downloads/
+results/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.zip
+*.tar
+*.tar.gz
+
+# OS metadata
+.DS_Store
+._*

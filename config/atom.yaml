@@ -1,0 +1,6 @@
+algo_name: atom
+algo_param: default
+display_name: atom
+HOST_PORT_URL : "http://127.0.0.1:5000/"
+LAUNCH_URL : "/api/v1/mot/pytracking/launch_tracking"
+TRACK_NEXT_URL : "/api/v1/mot/pytracking/track_next"

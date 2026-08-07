@@ -1,0 +1,13 @@
+numpy==1.26.4
+scipy==1.13.1
+Pillow==11.3.0
+PyYAML==6.0.3
+requests==2.32.5
+urllib3==1.26.20
+PyQt5==5.15.11
+lxml==5.4.0
+opencv-contrib-python==4.11.0.86
+qdarkstyle==3.2.3
+pybase64==1.4.3
+watchdog==6.0.0
+dataclasses-json==0.6.7

@@ -1,0 +1,6 @@
+algo_name: tomp
+algo_param: tomp101
+display_name: tomp101
+HOST_PORT_URL : "http://127.0.0.1:5000/"
+LAUNCH_URL : "/api/v1/mot/pytracking/launch_tracking"
+TRACK_NEXT_URL : "/api/v1/mot/pytracking/track_next"
