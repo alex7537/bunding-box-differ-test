@@ -20,6 +20,11 @@ Current-frame PF/SAM selection and drawing are only for correcting an anchor.
 Rerunning SAM writes a separate `*_sam2.1_tiny_human_raw.json`; it does not overwrite
 the original PF-anchor propagation.
 
+`export_final_bbox_tracks.py` completes the batch after GUI review. It preserves
+human PF/SAM selections and emits PF for every unselected clip. A flagged but
+unreviewed clip remains `review_pending=true` even though its exported fallback is PF.
+It also writes `final_bbox_manifest.json` and `.csv` for pipeline consumption.
+
 The SAM service currently listens on the development machine loopback interface.
 The macOS launcher creates an SSH tunnel, opens the current 17-clip queue, and
 closes the tunnel when the GUI exits:

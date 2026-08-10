@@ -203,6 +203,29 @@ python3 tools/build_sam2_bbox_review_queue.py \
 
 GUI 同时显示绿色 PF、蓝色 SAM 和橙色人工确认框。最终决策按 clip 进行：人工只需选择“整段采用 PF”或“整段采用 SAM”，无需逐帧确认。选择结果写入队列，并在队列同级的 `final_bbox_tracks/<episode>/<clip>.json` 导出完整像素坐标 bbox 轨道。当前帧 PF/SAM 框和人工拖拽框仅用于修正锚点、重新传播 SAM。
 
+#### PF/SAM bbox 质检与修正工作流
+
+```text
+PF bbox + 视频
+      ↓
+SAM 传播 + PF/SAM 差异检测
+      ↓
+是否达到 clip 级冲突条件？
+      ├── 否 → 默认采用 PF 轨道
+      └── 是 → GUI 人工检查
+                  ├── SAM 正确 → 整段采用 SAM
+                  ├── PF 正确 → 整段采用 PF
+                  └── 两者都错/锚点错误
+                          ↓
+                     人工画一个 bbox
+                          ↓
+                     SAM 整段重跑
+                          ↓
+                     确认后采用新 SAM 轨道
+```
+
+最终轨道选择顺序为：人工重跑并确认的 SAM → 人工直接确认的 SAM → 人工确认的 PF → 未作选择时默认 PF。触发冲突但尚未人工查看的 clip 也会暂时输出 PF，但保留 `review_pending=true`，不能视为已确认正确。
+
 当前 `parcel_sorting_annotation_latest_20260807` 测试批次可直接双击或执行：
 
 ```bash
@@ -229,6 +252,17 @@ python3 tools/sam2_bbox_review_gui.py \
 ```
 
 本地只负责显示图片和保存审核记录；`--service-dataset-root` 是远端 SAM 服务实际可见的帧目录根路径。重跑结果保存为 `*_sam2.1_tiny_human_raw.json`，不会覆盖 PF 锚点产生的原始结果。
+
+人工检查后，为全量数据生成统一最终轨道：
+
+```bash
+python3 tools/export_final_bbox_tracks.py \
+  /local/dataset/results \
+  /local/test_output/bbox_adjustment_queue.json \
+  /local/test_output/final_bbox_tracks
+```
+
+该命令为每个 clip 输出一个 `final_bbox_tracks/<episode>/<clip>.json`，并生成 `final_bbox_manifest.json` 和 `final_bbox_manifest.csv`。manifest 会区分人工确认 SAM、人工重跑 SAM、人工确认 PF、未冲突默认 PF，以及仍待复查但临时回退 PF。PF 原始结果没有 bbox 的帧保留为 `box_xyxy_pixels: null`，并通过 `missing_bbox_count` 汇总，不会伪造框。
 
 ### 5. 汇总逐帧人工结论
 
