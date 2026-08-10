@@ -24,6 +24,7 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QSlider,
     QSpinBox,
     QSplitter,
     QStatusBar,
@@ -260,12 +261,22 @@ class ReviewWindow(QMainWindow):
         next_frame = QPushButton("下一帧")
         next_frame.clicked.connect(lambda: self.frame_spin.setValue(self.frame_spin.value() + 1))
         self.frame_spin = QSpinBox()
-        self.frame_spin.valueChanged.connect(self.load_frame)
+        self.frame_spin.valueChanged.connect(self._frame_changed)
         navigation.addWidget(previous)
         navigation.addWidget(QLabel("Frame"))
         navigation.addWidget(self.frame_spin)
         navigation.addWidget(next_frame)
         center_layout.addLayout(navigation)
+        timeline = QHBoxLayout()
+        timeline.addWidget(QLabel("1"))
+        self.frame_slider = QSlider(Qt.Horizontal)
+        self.frame_slider.setTracking(True)
+        self.frame_slider.setPageStep(5)
+        self.frame_slider.valueChanged.connect(self.frame_spin.setValue)
+        timeline.addWidget(self.frame_slider, 1)
+        self.frame_end_label = QLabel("1")
+        timeline.addWidget(self.frame_end_label)
+        center_layout.addLayout(timeline)
         self.canvas = BBoxCanvas()
         self.canvas.box_changed.connect(self._draft_changed)
         center_layout.addWidget(self.canvas, 1)
@@ -373,11 +384,22 @@ class ReviewWindow(QMainWindow):
         if not len(self.frame_paths) == len(self.references) == len(self.sam_frames):
             raise ValueError(f"frame count mismatch: {episode}/{clip}")
         self.frame_spin.blockSignals(True)
+        self.frame_slider.blockSignals(True)
         self.frame_spin.setRange(1, len(self.frame_paths))
         self.frame_spin.setValue(self.current_entry["anchor_frame"])
+        self.frame_slider.setRange(1, len(self.frame_paths))
+        self.frame_slider.setValue(self.current_entry["anchor_frame"])
+        self.frame_end_label.setText(str(len(self.frame_paths)))
         self.frame_spin.blockSignals(False)
+        self.frame_slider.blockSignals(False)
         self._set_default_attribution()
         self.load_frame(self.frame_spin.value())
+
+    def _frame_changed(self, frame_number):
+        self.frame_slider.blockSignals(True)
+        self.frame_slider.setValue(frame_number)
+        self.frame_slider.blockSignals(False)
+        self.load_frame(frame_number)
 
     def _set_default_attribution(self):
         status = self.current_entry["status"]
