@@ -14,9 +14,11 @@ python tools/build_sam2_bbox_review_queue.py \
 ```
 
 `sam2_bbox_review_gui.py` shows the PF box in green, the SAM box in blue, and the
-operator-selected box in orange. The operator can use PF, use SAM, or draw a new
-box. Rerunning SAM writes a separate `*_sam2.1_tiny_human_raw.json`; it does not
-overwrite the original PF-anchor propagation.
+operator-selected anchor box in orange. The final choice is clip-level: select the
+whole PF or SAM track once, and the GUI writes `final_bbox_tracks/<episode>/<clip>.json`.
+Current-frame PF/SAM selection and drawing are only for correcting an anchor.
+Rerunning SAM writes a separate `*_sam2.1_tiny_human_raw.json`; it does not overwrite
+the original PF-anchor propagation.
 
 The SAM service currently listens on the development machine loopback interface.
 The macOS launcher creates an SSH tunnel, opens the current 17-clip queue, and

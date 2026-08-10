@@ -74,6 +74,37 @@ def shape_box(box):
     return [min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)]
 
 
+def build_final_track_payload(entry, source, frame_paths, references, sam_frames, image_size):
+    width, height = image_size
+    frames = []
+    for index, frame_path in enumerate(frame_paths):
+        box = (
+            normalized_pf_box(references[index], width, height)
+            if source == "pf"
+            else sam_frames[index].get("box_xyxy_pixels")
+        )
+        if box is None:
+            raise ValueError(f"{source.upper()} track has no bbox at frame {index + 1}")
+        frames.append(
+            {
+                "frame_index": index + 1,
+                "frame_name": frame_path.name,
+                "box_xyxy_pixels": [round(float(value), 3) for value in box],
+            }
+        )
+    return {
+        "schema_version": 1,
+        "episode": entry["episode"],
+        "clip": entry["clip"],
+        "decision_scope": "whole_clip",
+        "selected_track": source,
+        "coordinate_space": "pixels_xyxy",
+        "image_size": {"width": width, "height": height},
+        "frame_count": len(frames),
+        "frames": frames,
+    }
+
+
 class BBoxCanvas(QWidget):
     box_changed = pyqtSignal(object)
 
@@ -235,6 +266,7 @@ class ReviewWindow(QMainWindow):
         self.current_source = None
         self.references = []
         self.sam_frames = []
+        self.sam_result_path = None
         self.frame_paths = []
         self.worker = None
         self.setWindowTitle("PF / SAM 包裹框复查")
@@ -301,9 +333,22 @@ class ReviewWindow(QMainWindow):
             quick.addWidget(button)
         controls_layout.addLayout(quick)
 
-        use_pf = QPushButton("采用当前 PF 框")
+        controls_layout.addWidget(QLabel("<b>最终 bbox 轨道（整段 clip 一次选择）</b>"))
+        track_choices = QHBoxLayout()
+        self.select_pf_track_button = QPushButton("整段采用 PF")
+        self.select_pf_track_button.clicked.connect(lambda: self.select_final_track("pf"))
+        self.select_sam_track_button = QPushButton("整段采用 SAM")
+        self.select_sam_track_button.clicked.connect(lambda: self.select_final_track("sam"))
+        track_choices.addWidget(self.select_pf_track_button)
+        track_choices.addWidget(self.select_sam_track_button)
+        controls_layout.addLayout(track_choices)
+        self.track_decision = QLabel("当前：尚未选择")
+        controls_layout.addWidget(self.track_decision)
+
+        controls_layout.addWidget(QLabel("<b>仅用于修正 SAM 锚点</b>"))
+        use_pf = QPushButton("用当前 PF 框作锚点")
         use_pf.clicked.connect(lambda: self.use_box("pf"))
-        use_sam = QPushButton("采用当前 SAM 框")
+        use_sam = QPushButton("用当前 SAM 框作锚点")
         use_sam.clicked.connect(lambda: self.use_box("sam"))
         draw = QPushButton("人工重画 bbox")
         draw.clicked.connect(self.start_drawing)
@@ -354,9 +399,12 @@ class ReviewWindow(QMainWindow):
         self.queue_list.clear()
         for entry in self.items:
             label = STATUS_LABELS.get(entry["status"], entry["status"])
+            final_track = entry.get("final_track_source")
+            decision = f"  最终={final_track.upper()}" if final_track else ""
             item = QListWidgetItem(
                 f"{label}\n{entry['episode']}/{entry['clip']}  "
                 f"低IoU={entry['low_iou_ratio']:.1%}  帧={entry['review_candidate_count']}"
+                f"{decision}"
             )
             if entry["status"] == "reanchor_required":
                 item.setBackground(QColor(255, 205, 205))
@@ -379,7 +427,8 @@ class ReviewWindow(QMainWindow):
             key=lambda item: int(item["frame_index"]),
         )
         result_dir = self.args.result_root / episode
-        raw = json.loads(select_sam_result(result_dir, clip).read_text())
+        self.sam_result_path = select_sam_result(result_dir, clip)
+        raw = json.loads(self.sam_result_path.read_text())
         self.sam_frames = raw["frames"]
         if not len(self.frame_paths) == len(self.references) == len(self.sam_frames):
             raise ValueError(f"frame count mismatch: {episode}/{clip}")
@@ -393,6 +442,7 @@ class ReviewWindow(QMainWindow):
         self.frame_spin.blockSignals(False)
         self.frame_slider.blockSignals(False)
         self._set_default_attribution()
+        self._show_track_decision()
         self.load_frame(self.frame_spin.value())
 
     def _frame_changed(self, frame_number):
@@ -407,6 +457,82 @@ class ReviewWindow(QMainWindow):
             "pf_wrong_smooth" if status == "sam_candidate_preferred" else "ambiguous"
         )
         self.attribution.setCurrentText(value)
+
+    def _show_track_decision(self):
+        source = self.current_entry.get("final_track_source")
+        self.track_decision.setText(
+            f"当前：整段采用 {source.upper()} 轨道" if source else "当前：尚未选择"
+        )
+
+    def select_final_track(self, source):
+        if self.current_entry is None:
+            return
+        reviewer = self.reviewer.text().strip()
+        if not reviewer:
+            QMessageBox.warning(self, "缺少标注人", "请填写标注人。")
+            return
+        answer = QMessageBox.question(
+            self,
+            "确认整段轨道",
+            f"确认 {self.current_entry['episode']}/{self.current_entry['clip']} 的全部帧采用 "
+            f"{source.upper()} bbox 轨道？",
+        )
+        if answer != QMessageBox.Yes:
+            return
+        image = QImage(str(self.frame_paths[0]))
+        try:
+            payload = build_final_track_payload(
+                self.current_entry,
+                source,
+                self.frame_paths,
+                self.references,
+                self.sam_frames,
+                (image.width(), image.height()),
+            )
+        except ValueError as exc:
+            QMessageBox.warning(self, "轨道不完整", str(exc))
+            return
+        reviewed_at = datetime.now(timezone.utc).isoformat()
+        payload["reviewed_by"] = reviewer
+        payload["reviewed_at"] = reviewed_at
+        source_artifact = self.sam_result_path
+        if source == "pf":
+            source_artifact = (
+                self.args.dataset_root
+                / self.current_entry["episode"]
+                / self.current_entry["clip"]
+                / "calibrated"
+                / "results.json"
+            )
+        payload["source_artifact"] = str(source_artifact)
+        output = (
+            self.args.queue.parent
+            / "final_bbox_tracks"
+            / self.current_entry["episode"]
+            / f"{self.current_entry['clip']}.json"
+        )
+        output.parent.mkdir(parents=True, exist_ok=True)
+        temporary = output.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        temporary.replace(output)
+        self.current_entry.update(
+            {
+                "status": "resolved",
+                "recommended_action": "none",
+                "final_track_source": source,
+                "final_track_scope": "whole_clip",
+                "final_track_file": str(output.relative_to(self.args.queue.parent)),
+                "reviewed_by": reviewer,
+                "reviewed_at": reviewed_at,
+            }
+        )
+        self._write_queue()
+        row = self.queue_list.currentRow()
+        self._populate_queue()
+        self.queue_list.setCurrentRow(row)
+        self.statusBar().showMessage(f"已保存整段 {source.upper()} 轨道：{output}")
 
     def load_frame(self, frame_number):
         if self.current_entry is None:

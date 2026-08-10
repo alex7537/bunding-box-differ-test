@@ -201,7 +201,7 @@ python3 tools/build_sam2_bbox_review_queue.py \
   --overrides /path/to/bbox_review_overrides.json
 ```
 
-GUI 同时显示绿色 PF、蓝色 SAM 和橙色人工确认框，支持采用 PF、采用 SAM 或人工拖拽重画。
+GUI 同时显示绿色 PF、蓝色 SAM 和橙色人工确认框。最终决策按 clip 进行：人工只需选择“整段采用 PF”或“整段采用 SAM”，无需逐帧确认。选择结果写入队列，并在队列同级的 `final_bbox_tracks/<episode>/<clip>.json` 导出完整像素坐标 bbox 轨道。当前帧 PF/SAM 框和人工拖拽框仅用于修正锚点、重新传播 SAM。
 
 当前 `parcel_sorting_annotation_latest_20260807` 测试批次可直接双击或执行：
 

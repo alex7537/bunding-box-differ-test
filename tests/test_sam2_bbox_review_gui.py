@@ -6,7 +6,12 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PyQt5.QtWidgets import QApplication
 
-from tools.sam2_bbox_review_gui import ReviewWindow, normalized_pf_box, shape_box
+from tools.sam2_bbox_review_gui import (
+    ReviewWindow,
+    build_final_track_payload,
+    normalized_pf_box,
+    shape_box,
+)
 
 
 class Sam2BboxReviewGuiTest(unittest.TestCase):
@@ -16,6 +21,27 @@ class Sam2BboxReviewGuiTest(unittest.TestCase):
 
     def test_shape_box_orders_drag_directions(self):
         self.assertEqual(shape_box([20, 30, 5, 7]), [5.0, 7.0, 20.0, 30.0])
+
+    def test_build_final_track_payload_selects_one_whole_track(self):
+        entry = {"episode": "episode_1", "clip": "clip_001"}
+        frame_paths = [
+            SimpleNamespace(name="frame_000001.jpg"),
+            SimpleNamespace(name="frame_000002.jpg"),
+        ]
+        references = [{"box": [100, 200, 500, 600]}, {"box": [200, 300, 600, 700]}]
+        sam_frames = [
+            {"box_xyxy_pixels": [11, 12, 21, 22]},
+            {"box_xyxy_pixels": [31, 32, 41, 42]},
+        ]
+
+        payload = build_final_track_payload(
+            entry, "sam", frame_paths, references, sam_frames, (1280, 720)
+        )
+
+        self.assertEqual(payload["decision_scope"], "whole_clip")
+        self.assertEqual(payload["selected_track"], "sam")
+        self.assertEqual(payload["frame_count"], 2)
+        self.assertEqual(payload["frames"][1]["box_xyxy_pixels"], [31.0, 32.0, 41.0, 42.0])
 
     def test_frame_slider_and_spin_box_stay_synchronized(self):
         application = QApplication.instance() or QApplication([])

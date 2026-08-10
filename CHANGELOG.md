@@ -6,6 +6,7 @@
 
 ### Added
 
+- PF/SAM 复查页面新增 clip 级最终轨道选择，一次采用整段 PF 或 SAM，并导出最终 bbox 轨道 JSON。
 - 新增从 v4 manifest 生成 clip 级 bbox 调整队列的工具。
 - 新增 PF/SAM PyQt 复查页面，支持采用 PF、采用 SAM、人工重画和人工锚点 SAM2 重传播。
 - PF/SAM 复查页面新增可拖动的帧进度条，并与 Frame 数字控件双向同步。
