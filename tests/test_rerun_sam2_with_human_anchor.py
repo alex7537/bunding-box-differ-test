@@ -56,6 +56,36 @@ class RerunSam2WithHumanAnchorTest(unittest.TestCase):
             self.assertEqual(anchor["reviewed_by"], "tester")
             self.assertTrue(anchor["reviewed_at"].endswith("+00:00"))
 
+    @patch("tools.rerun_sam2_with_human_anchor._post_json")
+    def test_remote_service_can_use_a_different_frames_path(self, post_json):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            clip = root / "clip_001"
+            frames = clip / "frames"
+            results = root / "results"
+            frames.mkdir(parents=True)
+            results.mkdir()
+            cv2.imwrite(str(frames / "frame_000001.jpg"), np.zeros((20, 30, 3), dtype=np.uint8))
+            post_json.return_value = {
+                "status": 200,
+                "anchor_source": "human",
+                "anchor_frame": 1,
+                "frame_count": 1,
+                "frames": [{"frame_index": 1, "box_xyxy_pixels": [1, 2, 10, 12]}],
+            }
+
+            rerun_with_human_anchor(
+                clip, results, 1, [1, 2, 10, 12], "http://sam",
+                anchor_review_result="anchor_corrected", attribution="sam_wrong_anchor",
+                error_content="other", multi_parcel="unknown", reviewed_by="tester",
+                service_frames_dir="/share_data/zhangyurui/dataset/clip_001/frames",
+            )
+
+            self.assertEqual(
+                post_json.call_args.args[1]["frames_dir"],
+                "/share_data/zhangyurui/dataset/clip_001/frames",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

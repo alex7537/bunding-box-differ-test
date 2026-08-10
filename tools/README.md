@@ -1,5 +1,35 @@
 # Additional tools
 
+## Review PF/SAM bbox conflicts in the GUI
+
+`build_sam2_bbox_review_queue.py` converts the per-episode `review_manifest.json`
+files into one prioritized clip queue. Overrides can mark a confirmed bad anchor as
+`reanchor_required`, or a confirmed good SAM result as `sam_candidate_preferred`.
+
+```commandline
+python tools/build_sam2_bbox_review_queue.py \
+  downloads/parcel_sorting_annotation_latest_20260807_rerun_20260810/review_v4 \
+  downloads/parcel_sorting_annotation_latest_20260807_rerun_20260810/bbox_adjustment_queue.json \
+  --overrides downloads/parcel_sorting_annotation_latest_20260807_rerun_20260810/bbox_review_overrides.json
+```
+
+`sam2_bbox_review_gui.py` shows the PF box in green, the SAM box in blue, and the
+operator-selected box in orange. The operator can use PF, use SAM, or draw a new
+box. Rerunning SAM writes a separate `*_sam2.1_tiny_human_raw.json`; it does not
+overwrite the original PF-anchor propagation.
+
+The SAM service currently listens on the development machine loopback interface.
+The macOS launcher creates an SSH tunnel, opens the current 17-clip queue, and
+closes the tunnel when the GUI exits:
+
+```commandline
+./run-sam2-review-gui.command
+```
+
+For another batch, invoke `sam2_bbox_review_gui.py` directly with its dataset,
+result, review, and queue roots. When the service and GUI see different filesystem
+paths, pass `--service-dataset-root` so the API receives the remote frames path.
+
 ## Propagate a human parcel box and side label
 
 `run_remote_tracker_sequence.py` turns one trusted human annotation into a

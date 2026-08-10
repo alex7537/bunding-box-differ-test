@@ -4,10 +4,19 @@
 
 ## [Unreleased]
 
+### Added
+
+- 新增从 v4 manifest 生成 clip 级 bbox 调整队列的工具。
+- 新增 PF/SAM PyQt 复查页面，支持采用 PF、采用 SAM、人工重画和人工锚点 SAM2 重传播。
+- 新增当前 `parcel_sorting_annotation_latest_20260807` 批次的 macOS 一键启动脚本。
+
+### Changed
+
+- 人工锚点重跑支持单独指定服务端可见的 `frames_dir`，本地 GUI 可通过 SSH 隧道调用开发机 SAM2。
+
 ### Planned
 
 - 将 PF 输入、视频抽帧、SAM2 调用和复查包生成封装成正式 pipeline 节点。
-- 将异常帧队列、锚点确认和重传播操作接入 GUI。
 - 使用人工 GT 标定复查阈值后，再评估是否开放 SAM 候选框自动采用。
 - 视实际需求验证独立重检测证据；当前 manifest 已预留 `det_box` 和 `det_iou` 字段。
 

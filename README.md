@@ -41,7 +41,7 @@ PF/SAM 逐帧比较
           └── clip 级持续冲突：先确认或重画锚点，再重跑 SAM2
 ```
 
-这套 QC 流程目前是可独立运行的离线工具，还没有封装成上游 PF 自动触发的正式 pipeline 节点，也没有完整接入 GUI 的异常帧队列。
+这套 QC 流程目前是可独立运行的离线工具，并已提供 PF/SAM 冲突复查 GUI；尚未封装成上游 PF 自动触发的正式 pipeline 节点。
 
 ## 模型与角色
 
@@ -189,7 +189,48 @@ python3 tools/rerun_sam2_with_human_anchor.py \
 
 随后重新运行 `generate_sam2_review_pack.py`。生成器会优先读取人工锚点结果，并更新复查决策。
 
-### 4. 汇总逐帧人工结论
+### 4. 使用 PF/SAM bbox 复查 GUI
+
+先把持续冲突整理为 clip 级操作队列：
+
+```bash
+python3 tools/build_sam2_bbox_review_queue.py \
+  /path/to/review_v4 \
+  /path/to/bbox_adjustment_queue.json \
+  --output-csv /path/to/bbox_adjustment_queue.csv \
+  --overrides /path/to/bbox_review_overrides.json
+```
+
+GUI 同时显示绿色 PF、蓝色 SAM 和橙色人工确认框，支持采用 PF、采用 SAM 或人工拖拽重画。
+
+当前 `parcel_sorting_annotation_latest_20260807` 测试批次可直接双击或执行：
+
+```bash
+./run-sam2-review-gui.command
+```
+
+启动器会创建本地 SSH 隧道、打开 17 个冲突 clip 的队列，并在 GUI 退出时关闭隧道。其他数据批次可按下面方式手动启动。远端 SAM 服务只绑定开发机回环地址时，先建立 SSH 隧道：
+
+```bash
+ssh -N -L 15001:127.0.0.1:5001 yurui_dev_logistics_data_pipeline-1
+```
+
+另开一个终端启动 GUI：
+
+```bash
+python3 tools/sam2_bbox_review_gui.py \
+  --dataset-root /local/dataset/results \
+  --result-root /local/test_output/raw_full \
+  --review-root /local/test_output/review_v4 \
+  --queue /local/test_output/bbox_adjustment_queue.json \
+  --service-dataset-root /share_data/zhangyurui/sam21_propagation/input/parcel_sorting_annotation_latest_20260807/results \
+  --sam2-url http://127.0.0.1:15001 \
+  --reviewed-by zhangyurui
+```
+
+本地只负责显示图片和保存审核记录；`--service-dataset-root` 是远端 SAM 服务实际可见的帧目录根路径。重跑结果保存为 `*_sam2.1_tiny_human_raw.json`，不会覆盖 PF 锚点产生的原始结果。
+
+### 5. 汇总逐帧人工结论
 
 人工在 `review_candidates.csv` 的 `human_gt` 列填写以下枚举：
 
@@ -239,6 +280,8 @@ python3 -m unittest \
   tests.test_benchmark_sam2_propagation \
   tests.test_generate_sam2_review_pack \
   tests.test_rerun_sam2_with_human_anchor \
+  tests.test_build_sam2_bbox_review_queue \
+  tests.test_sam2_bbox_review_gui \
   tests.test_evaluate_sam2_review_labels
 ```
 
@@ -251,18 +294,15 @@ python3 -m unittest \
 - 当前 Flask 服务使用单 GPU 锁，适合验证和节点接入，不是最终生产级多副本服务。
 - LOF 和 Grounding DINO 尚未接入当前 QC 主流程。
 
-## GitHub 同步准备
+## GitHub 同步
 
-仓库目前尚未初始化 Git。创建远端仓库后，可在确认待提交文件无敏感信息和大文件后执行：
+仓库已经初始化并关联远端 `git@github.com:alex7537/bunding-box-differ-test.git`。同步前执行：
 
 ```bash
 cd /Users/zhangyurui/code/11/ubuntu_label
-git init
 git add .
 git status
-git commit -m "chore: establish parcel annotation and QC baseline"
-git branch -M main
-git remote add origin <YOUR_GITHUB_REPOSITORY_URL>
+git commit -m "<message>"
 git push -u origin main
 ```
 

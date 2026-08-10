@@ -44,6 +44,7 @@ def rerun_with_human_anchor(
     error_content="other",
     multi_parcel="unknown",
     reviewed_by="unknown",
+    service_frames_dir=None,
 ):
     if anchor_review_result not in {"anchor_confirmed", "anchor_corrected"}:
         raise ValueError("anchor review result must be anchor_confirmed or anchor_corrected")
@@ -69,7 +70,10 @@ def rerun_with_human_anchor(
         raise FileExistsError(f"human SAM result already exists: {output_path}; use --force to replace it")
 
     payload = {
-        "frames_dir": str((clip_dir / "frames").resolve()),
+        "frames_dir": (
+            str((clip_dir / "frames").resolve())
+            if service_frames_dir is None else str(service_frames_dir)
+        ),
         "anchor_frame": anchor_frame,
         "anchor_source": "human",
         "box_xyxy_pixels": box,
@@ -137,6 +141,13 @@ def main():
     )
     parser.add_argument("--multi-parcel", required=True, choices=("true", "false", "unknown"))
     parser.add_argument("--reviewed-by", required=True)
+    parser.add_argument(
+        "--service-frames-dir",
+        help=(
+            "frames directory visible to the SAM2 service; use this when the GUI or CLI "
+            "runs locally but SAM2 runs on a remote development machine"
+        ),
+    )
     parser.add_argument("--force", action="store_true", help="replace an existing human-anchor result")
     args = parser.parse_args()
 
@@ -149,6 +160,7 @@ def main():
         anchor_review_result=args.anchor_review_result, attribution=args.attribution,
         error_content=args.error_content, multi_parcel=args.multi_parcel,
         reviewed_by=args.reviewed_by,
+        service_frames_dir=args.service_frames_dir,
     )
     print(f"wrote human-anchor SAM result: {output}")
     print("rerun generate_sam2_review_pack.py to refresh the review decisions")
