@@ -6,6 +6,7 @@
 
 ### Added
 
+- 新增调用现有 SAM2 服务的三 PF 锚点小规模测试工具、共识指标、对照视频和实验报告；低共识时禁止自动选择轨道。
 - 新增全量最终 bbox 轨道导出器，按人工决策优先、未选择回退 PF 的规则生成逐 clip JSON、总 manifest 和 CSV。
 - PF/SAM 复查页面新增 clip 级最终轨道选择，一次采用整段 PF 或 SAM，并导出最终 bbox 轨道 JSON。
 - 新增从 v4 manifest 生成 clip 级 bbox 调整队列的工具。

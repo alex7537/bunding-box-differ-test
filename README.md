@@ -54,6 +54,8 @@ PF/SAM 逐帧比较
 
 详细测试见 [SAM2.1 测试报告](SAM21_PROPAGATION_TEST_REPORT.md) 和 [Cutie 对比报告](CUTIE_PROPAGATION_TEST_REPORT.md)。报告中的 PF IoU 是一致性指标，不能当作人标 GT 准确率。
 
+三 PF 锚点的小规模测试见 [SAM2.1 三锚点测试报告](SAM21_MULTI_ANCHOR_SMALL_TEST_REPORT.md)。当前结论是多锚点适合暴露轨道不一致，但不能替代人工重锚，因此正式流程仍保留单锚点，多锚点只作为冲突诊断工具。
+
 ## 目录说明
 
 ```text

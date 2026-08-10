@@ -37,6 +37,24 @@ For another batch, invoke `sam2_bbox_review_gui.py` directly with its dataset,
 result, review, and queue roots. When the service and GUI see different filesystem
 paths, pass `--service-dataset-root` so the API receives the remote frames path.
 
+## Run a small SAM2 multi-anchor diagnostic
+
+`benchmark_sam2_multi_anchor.py` sends 25%/50%/75% PF anchors to the existing
+SAM2 service, compares the three full tracks, and checks them against the
+human-selected final track. It reports `no_consensus` unless at least one pair
+has median track IoU at or above 0.7. This is a diagnostic experiment and does
+not replace the production single-anchor result.
+
+```commandline
+python tools/benchmark_sam2_multi_anchor.py \
+  --dataset-root /local/results \
+  --service-dataset-root /share_data/results \
+  --final-track-root /local/run/final_bbox_tracks \
+  --output-dir /local/run/multi_anchor_test \
+  --sam2-url http://127.0.0.1:15001 \
+  --clips episode_id/clip_001
+```
+
 ## Propagate a human parcel box and side label
 
 `run_remote_tracker_sequence.py` turns one trusted human annotation into a
