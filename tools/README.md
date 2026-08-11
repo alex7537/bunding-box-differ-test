@@ -55,6 +55,20 @@ python tools/benchmark_sam2_multi_anchor.py \
   --clips episode_id/clip_001
 ```
 
+## Render before/after human-rerun videos
+
+`render_sam2_human_rerun_comparison.py` uses only archived local results. For
+every `*_human_anchor.json`, it renders original PF/SAM on the left and
+PF/human-anchor-rerun SAM on the right, then joins all corrected clips into one
+handoff video. It does not require a running SAM2 service.
+
+```commandline
+python tools/render_sam2_human_rerun_comparison.py \
+  --dataset-root /local/dataset/results \
+  --result-root /local/run/raw_full \
+  --output-dir /local/run/human_rerun_before_after_videos
+```
+
 ## Propagate a human parcel box and side label
 
 `run_remote_tracker_sequence.py` turns one trusted human annotation into a
