@@ -1,5 +1,7 @@
 # Parcel Annotation & PF/SAM QC
 
+基于sam 远端调用 的 bbox 辅助检测修复 的gui 标注器
+
 面向物流包裹数据的桌面标注、目标框传播和 PerceptFlow（PF）质量复查工具。
 
 当前仓库已具备以下能力：
