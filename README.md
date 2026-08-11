@@ -1,6 +1,6 @@
 # Parcel Annotation & PF/SAM QC
 
-基于sam 远端调用 的 bbox 辅助检测修复 的gui 标注器
+面向物流包裹数据的 PF/SAM bbox 质量复查与人工校准工具：通过 SAM2 双向传播发现轨道差异，支持人工重设锚点，并导出完整 clip 的最终 bbox 轨道。
 
 面向物流包裹数据的桌面标注、目标框传播和 PerceptFlow（PF）质量复查工具。
 
