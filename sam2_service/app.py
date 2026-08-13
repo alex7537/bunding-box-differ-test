@@ -206,11 +206,12 @@ def main() -> None:
     parser.add_argument("--model-cfg", required=True)
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--allowed-root", type=Path, required=True)
+    parser.add_argument("--device", default="cuda")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=5001)
     args = parser.parse_args()
 
-    runtime = Sam2Runtime(args.model_cfg, args.checkpoint)
+    runtime = Sam2Runtime(args.model_cfg, args.checkpoint, device=args.device)
     app = create_app(runtime, args.allowed_root)
     app.run(host=args.host, port=args.port, threaded=True)
 

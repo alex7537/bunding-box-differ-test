@@ -101,7 +101,7 @@ source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
-SAM2 服务应部署在带 NVIDIA GPU 的 Linux 环境。服务端基础依赖见 `sam2_service/requirements.txt`，SAM2 源码、配置和 checkpoint 需要另外准备。当前已验证环境：
+SAM2 服务应部署在带 NVIDIA GPU 的 Linux 环境。仓库已经提供固定版本、checkpoint 校验、裸机/TI-ONE 一键安装脚本、服务管理脚本和 Dockerfile；完整步骤见 [SAM2.1 Tiny 服务部署说明](docs/SAM2_DEPLOYMENT.md)。当前已验证环境：
 
 - TI-ONE 开发机：`yurui_dev_logistics_data_pipeline-1`
 - 实例：`nb-1644996944449882880-chxar1irbw8w`
